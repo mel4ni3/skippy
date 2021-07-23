@@ -1,29 +1,35 @@
 import discord
+import os
 import random
 from discord.ext import commands
+from dotenv import load_dotenv
 
-client = commands.Bot(command_prefix = '$')
-client.remove_command("help")
+load_dotenv()  # take environment variables from .env.
+TOKEN = os.getenv('DISCORD_TOKEN')
 
-@client.event
+bot = commands.Bot(command_prefix = '$')
+
+# bot.remove_command("help")
+
+@bot.event
 async def on_ready():
-    print('We have logged in as {0.user}'.format(client))
-    print(client.user.id)
-    await client.change_presence(activity = discord.Game('$help'), status = discord.Status.idle)
+    print('We have logged in as {0.user}'.format(bot))
+    print(bot.user.id)
+    await bot.change_presence(activity = discord.Game('$help'), status = discord.Status.idle)
 
-@client.event
+@bot.event
 async def on_member_join(member):
     print(f'{member} has joined a server.')
 
-@client.event
+@bot.event
 async def on_member_remove(member):
     print(f'{member} has left a server.')
 
-@client.command()
+@bot.command(name='ping', help='Returns pong with latency.')
 async def ping(ctx):
-    await ctx.send(f'Pong! {round(client.latency * 1000)}ms')
+    await ctx.send(f'Pong! {round(bot.latency * 1000)}ms')
 
-@client.command(aliases=['8ball'])
+@bot.command(aliases=['8ball'], help='Ask a yes or no question. Must provide a question to get an answer.')
 async def _8ball(ctx, *, question):
     messages = ['It is certain',
         'It is decidedly so',
@@ -44,7 +50,7 @@ async def _8ball(ctx, *, question):
     embed = discord.Embed(title = messages[random.randint(0, len(messages) - 1)], colour = discord.Colour.random())
     await ctx.send(embed = embed)
 
-@client.command()
+@bot.command()
 async def embed(ctx):
     embed=discord.Embed(title="Sample Embed", 
         url="https://realdrewdata.medium.com/", 
@@ -64,7 +70,7 @@ async def embed(ctx):
 
     await ctx.send(embed=embed)
 
-@client.command()
+@bot.command()
 async def map(ctx):
     embed=discord.Embed(title="UCF Campus Map", 
         url="https://map.ucf.edu/",
@@ -74,7 +80,7 @@ async def map(ctx):
     
     await ctx.send(embed=embed)
 
-@client.command(aliases=["whois"])
+@bot.command(aliases=["whois"])
 async def userinfo(ctx, member: discord.Member = None):
     if not member:  # if member is no mentioned
         member = ctx.message.author  # set member as the author
@@ -95,7 +101,7 @@ async def userinfo(ctx, member: discord.Member = None):
     print(member.top_role.mention)
     await ctx.send(embed=embed)
 
-@client.command(aliases=["avatar", "pfp"])
+@bot.command(aliases=["avatar", "pfp"])
 async def av(ctx, member: discord.Member = None):
     if not member:
         member = ctx.message.author
@@ -105,10 +111,10 @@ async def av(ctx, member: discord.Member = None):
     await ctx.send(embed=embed)
 
 
-@client.command(aliases=["help"])
+@bot.command()
 async def info(ctx):
-    embed=discord.Embed(title=client.user.display_name, colour=discord.Colour.greyple(), description="prefix: $")
-    embed.set_thumbnail(url=client.user.avatar_url)
+    embed=discord.Embed(title=bot.user.display_name, colour=discord.Colour.greyple(), description="prefix: $")
+    embed.set_thumbnail(url=bot.user.avatar_url)
     embed.add_field(name="ping", value="Returns pong with latency")
     embed.add_field(name="map", value="Returns a map of UCF")
     embed.add_field(name="8ball", value="Must provide a question to get an answer")
@@ -119,12 +125,28 @@ async def info(ctx):
     embed.set_footer(text=f"Requested by {ctx.author}")
     await ctx.send(embed=embed)
 
-@client.command()
+@bot.command()
 async def bruh(ctx):
 
     await ctx.send("https://www.youtube.com/watch?v=2ZIpFytCSVc")
 
+@bot.command(name='dice', help='Simulates rolling dice.')
+async def roll(ctx, number_of_dice: int, number_of_sides: int):
+    dice = [
+        str(random.choice(range(1, number_of_sides + 1)))
+        for _ in range(number_of_dice)
+    ]
+    embed=discord.Embed(title='Roll' + number_of_dice + 'dice with' + number_of_sides + 'sides', description=', '.join(dice))
+    #await ctx.send(', '.join(dice))
+    await ctx.send(embed=embed)
+
+@bot.command(name='coinflip', help='Flip a coin for either heads or tails.')
+async def coinflip(ctx):
+    coin = ['Heads', 'Tails']
+    embed = discord.Embed(title = "It\'s" + coin[random.randint(0, len(coin) - 1)], colour = discord.Colour.red())
+    await ctx.send(embed = embed)
 
 
 
-client.run('ODY1MzA5NTcxOTM3ODYxNjcz.YPCIVg.sqoJTl9ysP3GLXNHBhxU_gy7k9U')
+
+bot.run(TOKEN)
